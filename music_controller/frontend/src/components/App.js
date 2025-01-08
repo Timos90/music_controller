@@ -1,16 +1,25 @@
-import React, { Component } from "react";
+import React from "react";
 import { createRoot } from "react-dom/client";
+import HomePage from "./HomePage";
+import RoomJoinPage from "./RoomJoinPage";
+import CreateRoomPage from "./CreateRoomPage";
 
-export default class App extends Component {
-    constructor(props) {
-        super(props);
-    }
-
-    render() {
-        return <h1>Music Controller</h1>;
-    }
-}
+const App = () => {
+    return (
+    <div>
+        <HomePage />
+    </div>
+        );
+};
 
 const appDiv = document.getElementById("app");
-const root = createRoot(appDiv);
-root.render(<App />);
+if (appDiv) {
+    const root = createRoot(appDiv);
+    root.render(
+        <React.StrictMode>
+            <App />
+        </React.StrictMode>
+    );
+} else {
+    console.error("No element with id 'app' found.");
+}
