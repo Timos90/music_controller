@@ -42,13 +42,10 @@ const CreateRoomPage = () => {
 
   return (
     <Box
-      display="flex"
-      flexDirection="column"
-      justifyContent="center"
-      alignItems="center"
-      minHeight="100vh"
-      padding={2}
-      bgcolor="#f5f5f5"
+        display="flex"
+        flexDirection="column"
+        justifyContent="center"
+        alignItems="center"
     >
       <Typography component="h4" variant="h4" marginBottom={2}>
         Create A Room

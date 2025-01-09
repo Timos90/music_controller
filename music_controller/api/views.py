@@ -27,6 +27,24 @@ class GetRoom(APIView):  # Define a view for getting a Room
         return Response({'Bad Request': 'Code parameter not found in request'}, status=status.HTTP_400_BAD_REQUEST)  # Return an error response if the code is None
 
 
+class JoinRoom(APIView):  # Define a view for joining a Room
+    lookup_url_kwarg = 'code'  # Set the lookup URL keyword argument to 'code'
+
+    def post(self, request, format=None):
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+        
+        code = request.data.get(self.lookup_url_kwarg)
+        if code != None:
+            room_results = Room.objects.filter(code=code)
+            if len(room_results) > 0:
+                room = room_results[0]
+                self.request.session['room_code'] = code
+                return Response({'message': 'Room Joined!'}, status=status.HTTP_200_OK)
+            return Response({'Bad Request': 'Invalid Room Code'}, status=status.HTTP_400_BAD_REQUEST)
+        return Response({'Bad Request': 'Invalid post data, did not find a code key'}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class CreateRoomView(APIView):  # Define a view for creating a Room
     serializer_class = CreateRoomSerializer  # Set the serializer class to CreateRoomSerializer
 
@@ -45,10 +63,12 @@ class CreateRoomView(APIView):  # Define a view for creating a Room
                 room.guest_can_pause = guest_can_pause  # Update guest_can_pause
                 room.votes_to_skip = votes_to_skip  # Update votes_to_skip
                 room.save(update_fields=['guest_can_pause', 'votes_to_skip'])  # Save the updates
+                self.request.session['room_code'] = room.code
                 return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)  # Return the updated Room data
             else:
                 room = Room(host=host, guest_can_pause=guest_can_pause, votes_to_skip=votes_to_skip)  # Create a new Room
                 room.save()  # Save the new Room
+                self.request.session['room_code'] = room.code
                 return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)  # Return the new Room data
         return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST)  # Return an error response if data is invalid
     

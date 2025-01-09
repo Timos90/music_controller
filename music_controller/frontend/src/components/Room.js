@@ -21,7 +21,7 @@ const Room = () => {
   }, [roomCode]); // Dependency array ensures useEffect runs when roomCode changes
 
   return (
-    <div style={{ padding: "20px", textAlign: "center" }}>
+    <div>
       <h3>Room Code: {roomCode}</h3>
       <p>Votes to Skip: {votesToSkip}</p>
       <p>Guest Can Pause: {guestCanPause ? "Yes" : "No"}</p>

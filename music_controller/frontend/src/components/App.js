@@ -6,7 +6,7 @@ import CreateRoomPage from "./CreateRoomPage";
 
 const App = () => {
     return (
-    <div>
+    <div className="center">
         <HomePage />
     </div>
         );
