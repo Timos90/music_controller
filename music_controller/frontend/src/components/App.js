@@ -1,25 +1,26 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import HomePage from "./HomePage";
-import RoomJoinPage from "./RoomJoinPage";
-import CreateRoomPage from "./CreateRoomPage";
+import { BrowserRouter } from "react-router-dom";  // Import BrowserRouter
+import HomePage from "./HomePage";  // Import HomePage
 
 const App = () => {
-    return (
+  return (
     <div className="center">
+      <BrowserRouter>  {/* Wrap HomePage with BrowserRouter to provide routing context */}
         <HomePage />
+      </BrowserRouter>
     </div>
-        );
+  );
 };
 
 const appDiv = document.getElementById("app");
 if (appDiv) {
-    const root = createRoot(appDiv);
-    root.render(
-        <React.StrictMode>
-            <App />
-        </React.StrictMode>
-    );
+  const root = createRoot(appDiv);
+  root.render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>
+  );
 } else {
-    console.error("No element with id 'app' found.");
+  console.error("No element with id 'app' found.");
 }
