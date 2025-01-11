@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom"; // Import useNavigate for redirection
+import { useParams, useNavigate } from "react-router-dom"; // Import hooks for routing
 import { Box, Button, Typography } from "@mui/material";
+import CreateRoomPage from "./CreateRoomPage"; // Import CreateRoomPage component
 
 const Room = ({ leaveRoomCallback }) => {
   const { roomCode } = useParams(); // Get roomCode from URL params
@@ -8,27 +9,29 @@ const Room = ({ leaveRoomCallback }) => {
   const [votesToSkip, setVotesToSkip] = useState(2);
   const [guestCanPause, setGuestCanPause] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [showSettings, setShowSettings] = useState(false); // Show/hide settings state
 
-  // Fetch room details when component mounts
-  useEffect(() => {
-    const getRoomDetails = async () => {
-      try {
-        const response = await fetch(`/api/get-room?code=${roomCode}`);
-        if (!response.ok) {
-          leaveRoomCallback();
-          navigate("/");  // Redirect to home if room doesn't exist
-        }
-        const data = await response.json();
-        setVotesToSkip(data.votes_to_skip);
-        setGuestCanPause(data.guest_can_pause);
-        setIsHost(data.is_host);
-      } catch (error) {
-        console.error("Failed to fetch room details:", error);
+  // Function to fetch room details
+  const getRoomDetails = async () => {
+    try {
+      const response = await fetch(`/api/get-room?code=${roomCode}`);
+      if (!response.ok) {
+        leaveRoomCallback();
+        navigate("/");  // Redirect to home if room doesn't exist
       }
-    };
+      const data = await response.json();
+      setVotesToSkip(data.votes_to_skip);
+      setGuestCanPause(data.guest_can_pause);
+      setIsHost(data.is_host);
+    } catch (error) {
+      console.error("Failed to fetch room details:", error);
+    }
+  };
 
+  // Fetch room details on component mount
+  useEffect(() => {
     getRoomDetails();
-  }, [roomCode, navigate, leaveRoomCallback]); // Re-run effect if roomCode changes
+  }, [roomCode, navigate, leaveRoomCallback]); // Dependency array for useEffect
 
   // Handle leaving the room
   const leaveButtonPressed = async () => {
@@ -38,29 +41,73 @@ const Room = ({ leaveRoomCallback }) => {
     };
     try {
       await fetch("/api/leave-room", requestOptions);
-      leaveRoomCallback();  // Call the callback to update parent component
+      leaveRoomCallback();  // Reset the room in parent component
       navigate("/");  // Redirect to home
     } catch (error) {
       console.error("Error leaving room:", error);
     }
   };
 
-  return (
+  // Function to toggle settings view
+  const updateShowSettings = (value) => {
+    setShowSettings(value);
+  };
+
+  // Render settings view (using CreateRoomPage for room update)
+  const renderSettings = () => (
     <Box display="flex" flexDirection="column" alignItems="center" padding={3}>
-      <Typography variant="h4" gutterBottom>
-        Room Code: {roomCode}
-      </Typography>
-      <Typography variant="h6">Votes to Skip: {votesToSkip}</Typography>
-      <Typography variant="h6">Guest Can Pause: {guestCanPause ? "Yes" : "No"}</Typography>
-      <Typography variant="h6">Is Host: {isHost ? "Yes" : "No"}</Typography>
+      <CreateRoomPage
+        update={true}
+        votesToSkip={votesToSkip}
+        guestCanPause={guestCanPause}
+        roomCode={roomCode}
+        updateCallback={getRoomDetails} // Pass getRoomDetails as the callback
+      />
       <Button
         variant="contained"
         color="secondary"
-        onClick={leaveButtonPressed}
         sx={{ marginTop: 2 }}
+        onClick={() => updateShowSettings(false)}
       >
-        Leave Room
+        Close
       </Button>
+    </Box>
+  );
+
+  return (
+    <Box display="flex" flexDirection="column" alignItems="center" padding={3}>
+      {showSettings ? (
+        renderSettings() // Show settings if open
+      ) : (
+        <>
+          <Typography variant="h4" gutterBottom>
+            Room Code: {roomCode}
+          </Typography>
+          <Typography variant="h6">Votes to Skip: {votesToSkip}</Typography>
+          <Typography variant="h6">
+            Guest Can Pause: {guestCanPause ? "Yes" : "No"}
+          </Typography>
+          <Typography variant="h6">Is Host: {isHost ? "Yes" : "No"}</Typography>
+          {isHost && (
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => updateShowSettings(true)}
+              sx={{ marginTop: 2 }}
+            >
+              Settings
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            color="secondary"
+            onClick={leaveButtonPressed}
+            sx={{ marginTop: 2 }}
+          >
+            Leave Room
+          </Button>
+        </>
+      )}
     </Box>
   );
 };
