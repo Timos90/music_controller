@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import RoomJoinPage from "./RoomJoinPage";
 import CreateRoomPage from "./CreateRoomPage";
 import Room from "./Room";
-import { Routes, Route, Link, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Box, Button, ButtonGroup, Typography } from "@mui/material";
 
 const HomePage = () => {
@@ -28,6 +28,10 @@ const HomePage = () => {
     fetchUserRoom();
   }, [navigate, location.pathname]);
 
+  const leaveRoomCallback = () => {
+    setRoomCode(null);
+  }
+
   const renderHomePage = () => (
     <Box display="flex" flexDirection="column" alignItems="center" padding={3}>
       <Typography variant="h3" component="h1" marginBottom={3}>
@@ -46,10 +50,10 @@ const HomePage = () => {
 
   return (
     <Routes>
-      <Route path="/" element={roomCode ? <navigate to={`room/${roomCode}`} /> : renderHomePage} />
+      <Route path="/" element={roomCode ? <Navigate to={`room/${roomCode}`} /> : renderHomePage()} />
       <Route path="/join" element={<RoomJoinPage />} />
       <Route path="/create" element={<CreateRoomPage />} />
-      <Route path="/room/:roomCode" element={<Room />} />
+      <Route path="/room/:roomCode" element={<Room leaveRoomCallback={leaveRoomCallback} />} />
     </Routes>
   );
 };
