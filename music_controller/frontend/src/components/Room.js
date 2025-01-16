@@ -10,6 +10,7 @@ const Room = ({ leaveRoomCallback }) => {
   const [guestCanPause, setGuestCanPause] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const [showSettings, setShowSettings] = useState(false); // Show/hide settings state
+  const [spotifyAuthenticated, setSpotifyAuthenticated] = useState(false); // Track Spotify authentication
 
   // Function to fetch room details
   const getRoomDetails = async () => {
@@ -23,8 +24,28 @@ const Room = ({ leaveRoomCallback }) => {
       setVotesToSkip(data.votes_to_skip);
       setGuestCanPause(data.guest_can_pause);
       setIsHost(data.is_host);
+      setSpotifyAuthenticated(data.spotify_authenticated);
+      if (data.is_host) {
+        authenticateSpotify(); // Only authenticate Spotify if the user is the host
+      }
     } catch (error) {
       console.error("Failed to fetch room details:", error);
+    }
+  };
+
+  // Function to authenticate Spotify
+  const authenticateSpotify = async () => {
+    try {
+      const response = await fetch("/spotify/is-authenticated");
+      const data = await response.json();
+      setSpotifyAuthenticated(data.status);
+      if (!data.status) {
+        const authResponse = await fetch("/spotify/get-auth-url");
+        const authData = await authResponse.json();
+        window.location.replace(authData.url); // Redirect to Spotify auth URL if not authenticated
+      }
+    } catch (error) {
+      console.error("Spotify authentication failed:", error);
     }
   };
 
@@ -61,13 +82,13 @@ const Room = ({ leaveRoomCallback }) => {
         votesToSkip={votesToSkip}
         guestCanPause={guestCanPause}
         roomCode={roomCode}
-        updateCallback={getRoomDetails} // Pass getRoomDetails as the callback
+        updateCallback={getRoomDetails} // Pass getRoomDetails as the callback to refresh room details
       />
       <Button
         variant="contained"
         color="secondary"
         sx={{ marginTop: 2 }}
-        onClick={() => updateShowSettings(false)}
+        onClick={() => updateShowSettings(false)} // Close settings view
       >
         Close
       </Button>
@@ -88,6 +109,9 @@ const Room = ({ leaveRoomCallback }) => {
             Guest Can Pause: {guestCanPause ? "Yes" : "No"}
           </Typography>
           <Typography variant="h6">Is Host: {isHost ? "Yes" : "No"}</Typography>
+          <Typography variant="h6">
+            Spotify Authenticated: {spotifyAuthenticated ? "Yes" : "No"}
+          </Typography>
           {isHost && (
             <Button
               variant="contained"
