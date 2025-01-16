@@ -3,8 +3,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.http import HttpResponseRedirect
-from requests import post, Request
-from .util import save_user_tokens, is_spotify_authenticated
+from requests import post, get, Request
+from .util import *
 from .credentials import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI
 
 
@@ -77,5 +77,70 @@ class IsAuthenticated(APIView):
         try:
             is_authenticated = is_spotify_authenticated(request.session.session_key)
             return Response({'status': is_authenticated}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class CurrentSong(APIView):
+    """Get the current song playing on Spotify."""
+    def get(self, request, format=None):
+        try:
+            session_key = request.session.session_key
+            is_authenticated = is_spotify_authenticated(session_key)
+            if not is_authenticated:
+                return Response({'error': 'User is not authenticated.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+            # Get tokens from the database
+            tokens = get_user_tokens(session_key)
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': f"Bearer {tokens.access_token}",
+            }
+
+            # Make request to Spotify API
+            response = get('https://api.spotify.com/v1/me/player/currently-playing', headers=headers)
+
+            if response.status_code == 204:
+                return Response({'error': 'No song currently playing.'}, status=status.HTTP_204_NO_CONTENT)
+
+            if response.status_code == 401:
+                # If token is invalid, refresh it and retry
+                refresh_spotify_token(session_key)
+                tokens = get_user_tokens(session_key)  # Get new tokens
+                headers['Authorization'] = f"Bearer {tokens.access_token}"
+                response = get('https://api.spotify.com/v1/me/player/currently-playing', headers=headers)
+
+            if response.status_code != 200:
+                return Response({'error': response.json()}, status=response.status_code)
+
+            # Parse JSON response
+            response_data = response.json()
+
+            # Safely access song details
+            item = response_data.get('item', {})
+            if not item:
+                return Response({'error': 'No song details found in response.'}, status=status.HTTP_404_NOT_FOUND)
+
+            duration = item.get('duration_ms')
+            progress = response_data.get('progress_ms')
+            album_cover = item.get('album', {}).get('images', [{}])[0].get('url')
+            is_playing = response_data.get('is_playing')
+            song_id = item.get('id')
+
+            # Build artist string
+            artist_string = ', '.join(artist.get('name', 'Unknown') for artist in item.get('artists', []))
+
+            # Construct song data
+            song = {
+                'title': item.get('name', 'Unknown'),
+                'artist': artist_string,
+                'duration': duration,
+                'time': progress,
+                'image_url': album_cover,
+                'is_playing': is_playing,
+                'id': song_id,
+            }
+
+            return Response(song, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
