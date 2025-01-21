@@ -88,3 +88,11 @@ def execute_spotify_api_request(session_key, endpoint, post_=False, put_=False):
         return response.json()
     except Exception as e:
         return {'Error': f'Issue with request: {str(e)}'}
+
+
+def play_song(session_key):
+    return execute_spotify_api_request(session_key, "/player/play", put_=True)
+
+
+def pause_song(session_key):
+    return execute_spotify_api_request(session_key, "/player/pause", put_=True)

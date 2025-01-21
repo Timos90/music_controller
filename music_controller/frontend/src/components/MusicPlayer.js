@@ -15,6 +15,28 @@ import SkipNextIcon from "@mui/icons-material/SkipNext";
 const MusicPlayer = ({ title, artist, image_url, is_playing, time, duration }) => {
   const songProgress = (time / duration) * 100;
 
+  const pauseSong = async () => {
+    try {
+      await fetch("/spotify/pause", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("Error pausing song:", error);
+    }
+  };
+
+  const playSong = async () => {
+    try {
+      await fetch("/spotify/play", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+      });
+    } catch (error) {
+      console.error("Error playing song:", error);
+    }
+  };
+
   return (
     <Card sx={{ display: "flex", alignItems: "center", padding: 2 }}>
       <CardMedia
@@ -33,7 +55,11 @@ const MusicPlayer = ({ title, artist, image_url, is_playing, time, duration }) =
           </Typography>
         </CardContent>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <IconButton>
+          <IconButton
+            onClick={() => {
+              is_playing ? pauseSong() : playSong();
+            }}
+          >
             {is_playing ? <PauseIcon /> : <PlayArrowIcon />}
           </IconButton>
           <IconButton>
