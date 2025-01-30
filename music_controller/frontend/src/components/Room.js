@@ -55,16 +55,24 @@ const Room = ({ leaveRoomCallback }) => {
   const getCurrentSong = async () => {
     try {
       const response = await fetch("/spotify/current-song");
-      if (!response.ok) {
-        setSong({});
-        return;
+  
+      if (response.status === 204) {
+        console.log("No song is currently playing.");
+        return;  // Exit early if no content is returned
       }
+  
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} - ${response.statusText}`);
+      }
+  
       const data = await response.json();
       setSong(data);
+      console.log("Current song data:", data);
     } catch (error) {
       console.error("Failed to fetch current song:", error);
     }
   };
+  
 
   useEffect(() => {
     getRoomDetails();

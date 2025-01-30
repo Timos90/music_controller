@@ -28,10 +28,18 @@ const MusicPlayer = ({ title, artist, image_url, is_playing, time, duration }) =
 
   const playSong = async () => {
     try {
-      await fetch("/spotify/play", {
+      const response = await fetch("/spotify/play", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",  // Include session cookies
       });
+  
+      if (!response.ok) {
+        throw new Error("Failed to play song");
+      }
+  
+      // Update state if needed
+      if (onPlayPause) onPlayPause();
     } catch (error) {
       console.error("Error playing song:", error);
     }
