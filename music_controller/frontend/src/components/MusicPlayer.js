@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import PropTypes from "prop-types";
 import {
   Box,
   Typography,
@@ -7,13 +8,56 @@ import {
   CardMedia,
   IconButton,
   LinearProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseIcon from "@mui/icons-material/Pause";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 
-const MusicPlayer = ({ title, artist, image_url, is_playing, time, duration }) => {
+const MusicPlayer = ({
+  title,
+  artist,
+  image_url,
+  is_playing,
+  time,
+  duration,
+  votes,
+  votes_required,
+  onPlayPause,
+  onSkip,
+}) => {
   const songProgress = (time / duration) * 100;
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("info");
+  const [open, setOpen] = useState(false);
+
+  const showMessage = (msg, type) => {
+    setMessage(msg);
+    setMessageType(type);
+    setOpen(true);
+  };
+
+  const skipSong = async () => {
+    try {
+      const response = await fetch("/spotify/skip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        showMessage(data.error || "Failed to skip song.", "error");
+      } else {
+        showMessage(data.message || "Song skipped successfully!", "success");
+        if (onSkip) onSkip();
+      }
+    } catch (error) {
+      console.error("Error skipping song:", error);
+      showMessage("An error occurred.", "error");
+    }
+  };
 
   const pauseSong = async () => {
     try {
@@ -21,48 +65,62 @@ const MusicPlayer = ({ title, artist, image_url, is_playing, time, duration }) =
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });
+      showMessage("Song paused!", "info");
+      if (onPlayPause) onPlayPause(false);
     } catch (error) {
       console.error("Error pausing song:", error);
+      showMessage("Failed to pause song.", "error");
     }
   };
 
   const playSong = async () => {
     try {
-      const response = await fetch("/spotify/play", {
+      await fetch("/spotify/play", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",  // Include session cookies
       });
-  
-      if (!response.ok) {
-        throw new Error("Failed to play song");
-      }
-  
-      // Update state if needed
-      if (onPlayPause) onPlayPause();
+      showMessage("Song playing!", "info");
+      if (onPlayPause) onPlayPause(true);
     } catch (error) {
       console.error("Error playing song:", error);
+      showMessage("Failed to play song.", "error");
     }
   };
 
   return (
-    <Card sx={{ display: "flex", alignItems: "center", padding: 2 }}>
+    <Card
+      sx={{
+        display: "flex",
+        alignItems: "center",
+        padding: 2,
+        gap: 2,
+        maxWidth: 600,
+        margin: "auto",
+      }}
+    >
       <CardMedia
         component="img"
-        sx={{ width: 100, height: 100, objectFit: "cover", marginRight: 2 }}
+        sx={{ width: 100, height: 100, objectFit: "cover", borderRadius: 1 }}
         image={image_url}
         alt={`${title} album cover`}
       />
       <Box sx={{ flex: 1 }}>
-        <CardContent>
+        <CardContent sx={{ padding: 0 }}>
           <Typography component="h5" variant="h5">
             {title}
           </Typography>
-          <Typography color="textSecondary" variant="subtitle1">
+          <Typography color="text.secondary" variant="subtitle1">
             {artist}
           </Typography>
         </CardContent>
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            marginTop: 1,
+          }}
+        >
           <IconButton
             onClick={() => {
               is_playing ? pauseSong() : playSong();
@@ -70,7 +128,10 @@ const MusicPlayer = ({ title, artist, image_url, is_playing, time, duration }) =
           >
             {is_playing ? <PauseIcon /> : <PlayArrowIcon />}
           </IconButton>
-          <IconButton>
+          <IconButton onClick={skipSong}>
+            <Typography variant="subtitle2" color="text.secondary">
+              {votes} / {votes_required}
+            </Typography>
             <SkipNextIcon />
           </IconButton>
         </Box>
@@ -80,8 +141,28 @@ const MusicPlayer = ({ title, artist, image_url, is_playing, time, duration }) =
           sx={{ marginTop: 1 }}
         />
       </Box>
+
+      {/* Snackbar for messages */}
+      <Snackbar open={open} autoHideDuration={3000} onClose={() => setOpen(false)}>
+        <Alert severity={messageType} onClose={() => setOpen(false)}>
+          {message}
+        </Alert>
+      </Snackbar>
     </Card>
   );
+};
+
+MusicPlayer.propTypes = {
+  title: PropTypes.string.isRequired,
+  artist: PropTypes.string.isRequired,
+  image_url: PropTypes.string.isRequired,
+  is_playing: PropTypes.bool.isRequired,
+  time: PropTypes.number.isRequired,
+  duration: PropTypes.number.isRequired,
+  votes: PropTypes.number.isRequired,
+  votes_required: PropTypes.number.isRequired,
+  onPlayPause: PropTypes.func,
+  onSkip: PropTypes.func,
 };
 
 export default MusicPlayer;

@@ -60,7 +60,14 @@ const Room = ({ leaveRoomCallback }) => {
         console.log("No song is currently playing.");
         return;  // Exit early if no content is returned
       }
-  
+      
+      if (response.status === 401) {
+        console.error("User is not authenticated. Redirecting to Spotify login.");
+        // Redirect user to Spotify authentication if needed
+        window.location.href = "/spotify/get-auth-url";
+        return;
+      }
+      
       if (!response.ok) {
         throw new Error(`API Error: ${response.status} - ${response.statusText}`);
       }
