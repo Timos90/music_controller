@@ -9,7 +9,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Ignore environment variable files
-.venv
+venv
 .env
 .env.local
 .env.development.local
