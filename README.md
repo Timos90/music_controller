@@ -6,7 +6,7 @@ A **Django + React** web app that allows users to create rooms and control Spoti
 
 ## 🚀 Features
 
-- 🎼 **Spotify Integration** - Play, pause, and skip songs using Spotify.
+- 🎼 **Spotify Integration** - Play, pause, and skip songs using Spotify(premium).
 - 🏠 **Room Management** - Create and join rooms with unique codes.
 - 📊 **Vote-to-Skip System** - Users can vote to skip a song.
 - ⚡ **Real-time Updates** - Fetch current song details dynamically.
