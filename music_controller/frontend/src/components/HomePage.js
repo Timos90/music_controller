@@ -1,15 +1,20 @@
-import React, { useState, useEffect } from "react";
+// src/HomePage.js
+import React, { useEffect } from "react";
+import { useNavigate, useLocation, Navigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { setRoom } from "../store/reducers/roomReducer";
+import { Box, Button, ButtonGroup, Typography } from "@mui/material";
 import RoomJoinPage from "./RoomJoinPage";
 import CreateRoomPage from "./CreateRoomPage";
+import Info from "./Info";
 import Room from "./Room";
-import { Routes, Route, Link, useNavigate, useLocation, Navigate } from "react-router-dom";
-import { Box, Button, ButtonGroup, Typography } from "@mui/material";
-import Info from "./info";
+import { Routes, Route, Link } from "react-router-dom";
 
 const HomePage = () => {
-  const [roomCode, setRoomCode] = useState(null);
+  const dispatch = useDispatch();
+  const roomCode = useSelector((state) => state.room.roomCode); // Access roomCode from Redux
   const navigate = useNavigate();
-  const location = useLocation();  // Get the current URL path
+  const location = useLocation();
 
   useEffect(() => {
     const fetchUserRoom = async () => {
@@ -17,8 +22,12 @@ const HomePage = () => {
         const response = await fetch("/api/user-in-room");
         const data = await response.json();
         if (data.code && location.pathname === "/") {
-          // Redirect to the room only if you're on the home page
-          setRoomCode(data.code);
+          // Dispatch the room data to the Redux store
+          dispatch(setRoom({
+            roomCode: data.code,
+            votesToSkip: data.votes_to_skip,
+            guestCanPause: data.guest_can_pause,
+          }));
           navigate(`/room/${data.code}`);
         }
       } catch (error) {
@@ -27,11 +36,11 @@ const HomePage = () => {
     };
 
     fetchUserRoom();
-  }, [navigate, location.pathname]);
+  }, [dispatch, navigate, location.pathname]);
 
   const leaveRoomCallback = () => {
-    setRoomCode(null);
-  }
+    dispatch(setRoom({ roomCode: null, votesToSkip: 2, guestCanPause: true }));
+  };
 
   const renderHomePage = () => (
     <Box display="flex" flexDirection="column" alignItems="center" padding={3}>

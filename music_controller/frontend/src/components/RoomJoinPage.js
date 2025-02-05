@@ -1,11 +1,15 @@
+// src/RoomJoinPage.js
 import React, { useState } from "react";
 import { TextField, Button, Typography, Box } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setRoom } from '../store/reducers/roomReducer';
 
 const RoomJoinPage = () => {
-  const [roomCode, setRoomCode] = useState(""); // Replaces this.state.roomCode
-  const [error, setError] = useState(""); // Replaces this.state.error
-  const navigate = useNavigate(); // Replaces this.props.history.push()
+  const [roomCode, setRoomCode] = useState("");
+  const [error, setError] = useState("");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleTextFieldChange = (e) => {
     setRoomCode(e.target.value);
@@ -23,27 +27,30 @@ const RoomJoinPage = () => {
     try {
       const response = await fetch("/api/join-room", requestOptions);
       if (response.ok) {
-        navigate(`/room/${roomCode}`); // Redirect to room page
+        // Dispatch the room data to Redux after joining
+        const data = await response.json();
+        dispatch(setRoom({
+          roomCode: data.code,
+          votesToSkip: data.votes_to_skip,
+          guestCanPause: data.guest_can_pause,
+        }));
+        navigate(`/room/${data.code}`); // Redirect to the room
       } else {
         setError("Room not found.");
       }
     } catch (error) {
       console.error("Error:", error);
+      setError("An error occurred while joining the room.");
     }
   };
 
   return (
-    <Box
-      display="flex"
-      flexDirection="column"
-      alignItems="center"
-      justifyContent="center"
-    >
+    <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center">
       <Typography variant="h4" component="h4" marginBottom={3}>
         Join a Room
       </Typography>
       <TextField
-        error={!!error} // Converts string to boolean (true if error exists)
+        error={!!error}
         label="Code"
         placeholder="Enter a Room Code"
         value={roomCode}
