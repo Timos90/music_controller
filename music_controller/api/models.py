@@ -20,3 +20,12 @@ class Room(models.Model):
     votes_to_skip = models.IntegerField(null=False, default=1)
     created_at = models.DateTimeField(auto_now_add=True)
     current_song = models.CharField(max_length=50, null=True)
+
+class ChatMessage(models.Model):
+    room_code = models.CharField(max_length=10)
+    user = models.CharField(max_length=100)  # Store the username or user ID
+    message = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user}: {self.message} ({self.timestamp})"

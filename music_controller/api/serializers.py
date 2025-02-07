@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Room
+from .models import Room, ChatMessage
 
 class RoomSerializer(serializers.ModelSerializer):
     class Meta:
@@ -16,3 +16,8 @@ class UpdateRoomSerializer(serializers.ModelSerializer):
     class Meta:
         model = Room
         fields = ('guest_can_pause', 'votes_to_skip', 'code')
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChatMessage
+        fields = ['room_code', 'user', 'message', 'timestamp']

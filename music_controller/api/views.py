@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import generics, status
-from .models import Room
-from .serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer
+from .models import Room, ChatMessage
+from .serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer, ChatMessageSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.http import JsonResponse
@@ -126,3 +126,28 @@ class UpdateRoom(APIView):
             return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
 
         return Response({'Bad Request': 'Invalid Data...'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SendMessageView(APIView):
+    def post(self, request, room_code):
+        # Log the incoming request data for debugging
+        print("Received request data:", request.data)
+
+        # Ensure the room_code is added to the request data
+        data = request.data
+        data['room_code'] = room_code  # Ensure room_code is included in request data
+
+        # Use the serializer to validate and save the message
+        serializer = ChatMessageSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # Log the errors if the request is invalid
+        print("Validation errors:", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class GetMessagesView(APIView):
+    def get(self, request, room_code):
+        messages = ChatMessage.objects.filter(room_code=room_code).order_by('timestamp')
+        serializer = ChatMessageSerializer(messages, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

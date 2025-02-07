@@ -1,13 +1,13 @@
-// src/Room.js
 import React, { useState, useEffect, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, Card, CardContent } from "@mui/material";
+import ChatRoom from './ChatRoom';
 
 // Lazy load the MusicPlayer component
 const MusicPlayer = React.lazy(() => import("./MusicPlayer"));
 const CreateRoomPage = React.lazy(() => import("./CreateRoomPage"));
 
-const Room = ({ leaveRoomCallback }) => {
+const Room = ({ leaveRoomCallback, username }) => {
   const { roomCode } = useParams();
   const navigate = useNavigate();
   const [votesToSkip, setVotesToSkip] = useState(2);
@@ -133,9 +133,11 @@ const Room = ({ leaveRoomCallback }) => {
           <Typography variant="h4" gutterBottom>
             Room Code: {roomCode}
           </Typography>
+          {/* Lazy load MusicPlayer */}
           <Suspense fallback={<div>Loading Music Player...</div>}>
             <MusicPlayer {...song} />
           </Suspense>
+
           {isHost && (
             <Button
               variant="contained"
@@ -146,6 +148,7 @@ const Room = ({ leaveRoomCallback }) => {
               Settings
             </Button>
           )}
+
           <Button
             variant="contained"
             color="secondary"
@@ -154,6 +157,13 @@ const Room = ({ leaveRoomCallback }) => {
           >
             Leave Room
           </Button>
+
+          {/* ChatRoom styled in a box */}
+          <Card sx={{ marginTop: 3, width: '100%', maxWidth: 500, padding: 2 }}>
+            <CardContent>
+              <ChatRoom roomCode={roomCode} username={username} />
+            </CardContent>
+          </Card>
         </>
       )}
     </Box>
