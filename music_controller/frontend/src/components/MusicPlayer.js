@@ -60,30 +60,52 @@ const MusicPlayer = ({
   };
 
   const pauseSong = async () => {
-    try {
-      await fetch("/spotify/pause", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-      });
-      showMessage("Song paused!", "info");
-      if (onPlayPause) onPlayPause(false);
-    } catch (error) {
-      console.error("Error pausing song:", error);
-      showMessage("Failed to pause song.", "error");
+  // Optimistically update the pause state before making the API call
+  if (onPlayPause) onPlayPause(false);
+
+  try {
+    const response = await fetch("/spotify/pause", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    // Check if the response was successful
+    if (!response.ok) {
+      throw new Error("Failed to pause song.");
     }
-  };
+
+    showMessage("Song paused!", "info");
+  } catch (error) {
+    console.error("Error pausing song:", error);
+    showMessage("Failed to pause song.", "error");
+
+    // Revert the state if the fetch fails
+    if (onPlayPause) onPlayPause(true);
+  }
+};
 
   const playSong = async () => {
+    // Optimistically update the play state before making the API call
+    if (onPlayPause) onPlayPause(true);
+  
     try {
-      await fetch("/spotify/play", {
+      const response = await fetch("/spotify/play", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
       });
+  
+      // Check if the response was successful
+      if (!response.ok) {
+        throw new Error("Failed to play song.");
+      }
+  
       showMessage("Song playing!", "info");
-      if (onPlayPause) onPlayPause(true);
     } catch (error) {
       console.error("Error playing song:", error);
       showMessage("Failed to play song.", "error");
+  
+      // Revert the state if the fetch fails
+      if (onPlayPause) onPlayPause(false);
     }
   };
 

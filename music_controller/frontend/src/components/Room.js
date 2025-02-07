@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from "react";
+// src/Room.js
+import React, { useState, useEffect, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Box, Button, Typography } from "@mui/material";
-import CreateRoomPage from "./CreateRoomPage";
-import MusicPlayer from "./MusicPlayer";
+
+// Lazy load the MusicPlayer component
+const MusicPlayer = React.lazy(() => import("./MusicPlayer"));
+const CreateRoomPage = React.lazy(() => import("./CreateRoomPage"));
 
 const Room = ({ leaveRoomCallback }) => {
   const { roomCode } = useParams();
@@ -55,7 +58,7 @@ const Room = ({ leaveRoomCallback }) => {
   const getCurrentSong = async () => {
     try {
       const response = await fetch("/spotify/current-song");
-  
+
       if (response.status === 204) {
         console.log("No song is currently playing.");
         return;  // Exit early if no content is returned
@@ -71,7 +74,7 @@ const Room = ({ leaveRoomCallback }) => {
       if (!response.ok) {
         throw new Error(`API Error: ${response.status} - ${response.statusText}`);
       }
-  
+
       const data = await response.json();
       setSong(data);
       console.log("Current song data:", data);
@@ -79,7 +82,6 @@ const Room = ({ leaveRoomCallback }) => {
       console.error("Failed to fetch current song:", error);
     }
   };
-  
 
   useEffect(() => {
     getRoomDetails();
@@ -131,7 +133,9 @@ const Room = ({ leaveRoomCallback }) => {
           <Typography variant="h4" gutterBottom>
             Room Code: {roomCode}
           </Typography>
-          <MusicPlayer {...song} />
+          <Suspense fallback={<div>Loading Music Player...</div>}>
+            <MusicPlayer {...song} />
+          </Suspense>
           {isHost && (
             <Button
               variant="contained"

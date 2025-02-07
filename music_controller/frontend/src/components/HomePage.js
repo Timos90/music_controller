@@ -1,14 +1,16 @@
 // src/HomePage.js
-import React, { useEffect } from "react";
+import React, { useEffect, Suspense } from "react";
 import { useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setRoom } from "../store/reducers/roomReducer";
 import { Box, Button, ButtonGroup, Typography } from "@mui/material";
-import RoomJoinPage from "./RoomJoinPage";
-import CreateRoomPage from "./CreateRoomPage";
-import Info from "./Info";
-import Room from "./Room";
 import { Routes, Route, Link } from "react-router-dom";
+
+// Lazy load components
+const RoomJoinPage = React.lazy(() => import("./RoomJoinPage"));
+const CreateRoomPage = React.lazy(() => import("./CreateRoomPage"));
+const Info = React.lazy(() => import("./Info"));
+const Room = React.lazy(() => import("./Room"));
 
 const HomePage = () => {
   const dispatch = useDispatch();
@@ -62,13 +64,15 @@ const HomePage = () => {
   );
 
   return (
-    <Routes>
-      <Route path="/" element={roomCode ? <Navigate to={`room/${roomCode}`} /> : renderHomePage()} />
-      <Route path="/join" element={<RoomJoinPage />} />
-      <Route path="/info" element={<Info />} />
-      <Route path="/create" element={<CreateRoomPage />} />
-      <Route path="/room/:roomCode" element={<Room leaveRoomCallback={leaveRoomCallback} />} />
-    </Routes>
+    <Suspense fallback={<div>Loading...</div>}> {/* Show loading indicator until components are loaded */}
+      <Routes>
+        <Route path="/" element={roomCode ? <Navigate to={`room/${roomCode}`} /> : renderHomePage()} />
+        <Route path="/join" element={<RoomJoinPage />} />
+        <Route path="/info" element={<Info />} />
+        <Route path="/create" element={<CreateRoomPage />} />
+        <Route path="/room/:roomCode" element={<Room leaveRoomCallback={leaveRoomCallback} />} />
+      </Routes>
+    </Suspense>
   );
 };
 

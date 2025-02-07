@@ -30,7 +30,7 @@ const CreateRoomPage = ({
   const handleVotesChange = (e) => setVotes(Number(e.target.value));
   const handleGuestControlChange = (e) => setGuestControl(e.target.value === "true");
 
-  const handleRoomButtonPressed = () => {
+  const handleRoomButtonPressed = async () => {
     const requestOptions = {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -39,14 +39,30 @@ const CreateRoomPage = ({
         guest_can_pause: guestControl,
       }),
     };
-
-    fetch("/api/create-room", requestOptions)
-      .then((response) => response.json())
-      .then((data) => {
-        console.log(data);
-        navigate(`/room/${data.code}`);
-      });
+  
+    try {
+      const response = await fetch("/api/create-room", requestOptions);
+      const data = await response.json();
+      console.log(data);
+  
+      // Now, initiate Spotify login before navigating to the room
+      const spotifyResponse = await fetch("/spotify/get-auth-url");
+      const spotifyData = await spotifyResponse.json();
+      
+      // Redirect the user to Spotify login
+      window.location.replace(spotifyData.url);
+  
+      // **Only after the user logs in, they will be redirected to the room automatically by Spotify**
+      // This navigation won't happen until after the login page redirect completes
+      // navigate(`/room/${data.code}`);
+  
+    } catch (error) {
+      console.error("Error creating room:", error);
+      // Handle errors (e.g., show error message to the user)
+    }
   };
+  
+  
 
   const handleUpdateButtonPressed = () => {
     const requestOptions = {
